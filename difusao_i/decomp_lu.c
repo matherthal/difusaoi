@@ -1,7 +1,9 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include "decomp_lu.h"
 
 /*Se retorna 0 houve erro, senao nao*/
-int decomp_lu(int n, float a[n-1][n-1], float b[n-1], float x[n-1])
+int decomp_lu_bak(int n, float* a[], float b[], float x[])
 {
 	int i,j,k;
 	float M, E;
@@ -127,11 +129,77 @@ int decomp_lu(int n, float a[n-1][n-1], float b[n-1], float x[n-1])
 		x[i] = (y[i] - E) / a[i][i];
 	}
 
-	/*printf("\n");*
+	printf("\nSOLUCAO DE DENTRO DE decomp_lu");
 	for(i=0;i<n;i++)
 	{
 		printf("X[%d] = %5.5f\n",i+1,x[i]);
-	}*/
+	}
 
 	return 1;
+}
+
+void decomp_lu(float* L[], float* U[], unsigned n)
+/*
+   L - saída
+   U - entrada/saída
+   n - dimensão das matrizes (o sistema deve ser quadrado)
+*/
+{
+   int i,j,k;
+   /*Alocação da matriz L*/
+   for (i = 0; i < n; i++)
+      L[i] = (float*)malloc(n * sizeof(float));
+      
+   /*Fatoração em LU*/
+   for (i = 0; i < n; i++)
+   {
+      for (j =0; j < n; j++)
+      {
+         if (i == j)
+            L[i][j] = 1.0;
+         else
+            L[i][j] = 0.0;
+      }
+   }
+   
+   float mult = 0.0;
+   for (k = 0; k < n - 1; k++)
+   {
+      for (i = k + 1; i < n; i++)
+      {
+         mult = U[i][k] / U[k][k];
+         L[i][k] = mult;
+         U[i][k] = 0.0;
+         
+         for (j = k+1; j < n; j++)
+            U[i][j] -= U[k][j] * mult;
+      }  
+   }   
+}
+
+void solve_lu(float solution[], float* L[], float* U[], float C[], unsigned n)
+{
+   int i,j;
+   
+   /*Foward substitution (L*y = b)*/
+   float y[n];
+   y[0] = C[0] / L[0][0];
+   
+   for (i = 1; i < n; i++)
+   {
+      float sum = 0.0;
+      for (j = 0; j < i; j++)
+         sum += L[i][j] * y[j];
+      y[i] = (C[i] - sum) / L[i][i];
+   }
+   
+   /*Backwards substitution (U*solution = y)*/
+   solution[n-1] = C[n-1] / U[n-1][n-1];
+   for (i = n - 2; i >= 0; i--)
+   {
+      float sum = 0.0;
+      for (j = i + 1; j < n; j++)
+         sum += U[i][j] * solution[j];
+      solution[i] = (C[i] - sum) / U[i][i];
+   }
 }

@@ -8,6 +8,7 @@
 #ifndef DECOMP_LU_H_
 #define DECOMP_LU_H_
 
-int decomp_lu(int n, float *a[n][n], float *b[n], float *x[n]);
+void decomp_lu(float* L[], float* U[], unsigned n);
+void solve_lu(float solution[], float* L[], float* U[], float C[], unsigned n);
 
 #endif /* DECOMP_LU_H_ */
